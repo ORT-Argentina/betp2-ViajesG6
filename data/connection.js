@@ -1,8 +1,8 @@
-const mongoCLient = require('mongodb').MongoClient;
+const mongoClient = require('mongodb').MongoClient;
 require('dotenv').config();
 const uri = process.env.CONNECTION_MONGO;
 console.log(uri);
-const client = new mongoCLient(uri);
+const client = new mongoClient(uri, { useUnifiedTopology: true });
 
 let instance = null;
 

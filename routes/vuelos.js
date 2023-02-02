@@ -3,11 +3,15 @@ var router = express.Router();
 const dataVuelo = require('../data/vuelodb');
 const auth = require('../middleware/auth');
 
+// const {} = require('../controllers/vuelosController');
+
 /* GET vuelos listing. */
 router.get('/', auth, async (req, res) => {
     const vuelos = await dataVuelo.getVuelos();
     res.json(vuelos);
 });
+
+// router.get('/', auth, getVuelos);
 
 router.get('/:id', async (req, res) => {
     const vuelo = await dataVuelo.getVuelo(req.params.id);

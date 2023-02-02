@@ -18,6 +18,10 @@ async function getVuelo(id) {
     const clienteMongo = await connection.getConnection();
     const vuelo = await clienteMongo.db(dbName).collection('vuelos')
         .findOne({_id: new objectId(id)});
+
+    if(!vuelo){ 
+        throw new Error('Vuelo no registrado') 
+    }   
     return vuelo;
 }
 
