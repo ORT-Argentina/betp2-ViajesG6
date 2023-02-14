@@ -1,58 +1,87 @@
 ##### BETP2-VIAJESG6
- 
+# APP Vuelos
+
+Alumnos: Shanon Samora.
+
+La aplicacion es un sistema de gestión de pasajes de avión en la que se pueden realizar consultas pudiendo filtrar por pais de origen y destino, millas y fecha de salida. Además, cada usuario puede comprar un pasaje de avión si cuenta con las millas suficientes y haya asientos disponibles. Por supuesto también se cuenta con registro e ingreso de usuario.
+
 ##### Descripción
 Es una app de vuelos, en la que se realizan consultas pudiendo filtrar por país de origen/destino, y fecha de ida/vuelta. Cada usuario registrado podrá marcar un viaje como favorito, añadiendolo a una lista personal que podrá ver en su perfil, además podrá suscribirse para recibir información sobre promociones. 
-
-##### Funciones
-Buscar pasajes (se podrá filtrar la búsqueda y luego listar los distintos paquetes según las preferencias del usuario. Menor precio/etc ).
-Comprar Pasajes. *UsuarioCliente
-Cancelar Pasajes. *UsuarioCliente
-Agregar viajes a favoritos. *UsuarioCliente
-Modificar datos del perfil. *UsuarioCliente
-Visualizar lista de viajes añadidos a favoritos. *UsuarioCliente
-
-
-##### Roles
-UsuarioNoLogueado – UsuarioCliente  
-
-##### Entidades Principales
-
-Vuelo
-Compra
-Registro
-Usuario
-Origen
-Destino
  
 ##### Package
 Ejecuta `npm install`, instalando así todas las dependencias en el path _node\_modules_. 
-
-##### Available Scripts
-
-En el directorio del proyecto, puede ejecutar:
-
 ##### `npm start`
-
-Ejecuta la aplicación en el modo de desarrollo. \
 Abra [http://localhost:3000](http://localhost:3000) para verlo en el navegador.
 
-##### `npm run startdev`
+# Usuarios:
 
-Ejecuta la aplicación en el modo de desarrollo. \
-Abra [http://localhost:3000](http://localhost:3000) para verlo en el navegador.
+- Todos los usuarios: GET /users (requiere token)
+- GET usuario por ID: GET /users/:id (requiere token)
+- Alta/Registro de usuario POST: /users/signup (body):
+{
+    "email": "elon@gmail.com",
+    "password": "hola123",
+    "nombre": "Elon",
+    "apellido": "Musk",
+    "fecha_nacimiento": "2001-12-26"
+}
+Se agrega automaticamente el dinero disponible (en 0) y una lista (array) vacia de "vuelos_comprados". Ademas, la password es encriptada con bcrypt.
 
-La página se recargará si realiza modificaciones. \
-También verá el hilo de errores en la consola.
+- LogIn POST /users/login (body):
+{
+    "email": "elon@gmail.com",
+    "password": "hola123"
+}
 
-##### Endpoints
+- Compra de vuelo /users/comprarVuelo/:id (body):
+{
+    "pasajeros": 2
+}
 
-/vuelos (oferta de vuelos recomendados) : get <!--(home)->
-<!--Definir como filtro tirar los vuelos mas baratos (vuelosMasBaratos = true)-->
-/login : post <!--(log in)->
-/signup (registrarse) : post <!--(registrarse)->
-/vuelos (busqueda de vuelo) : post <!--(search)->
-/compra (compra de vuelo) : post
-<!--Se llama desde el front-->
-<!--Que el usuario tenga en su perfil "mis compras" sus vuelos comprados y tenga la opcion de cancelarlos-->
-/usuario (eliminar cuenta) : delete <!--(profile)->
-/usuario (actualizar perfil) : update <!--(profile)->
+- Cancelación de vuelo /users/cancelarVuelo/:id
+- Vuelos de usuario GET /users/misVuelos/:email
+- Actualización de contraseña PUT /users/updatePassword/:id (body):
+{
+    "password": "hola12"
+}
+
+- Borrar un usuario DELETE /users/deleteUser/:id
+
+# Vuelos:
+
+- Todos los vuelos: GET /vuelos
+- GET vuelo por ID: GET /vuelos/:id
+- Alta de una vuelo: POST /vuelos/addVuelo (body):
+    {
+        "origen": {
+            "iata_code": "EZE"
+        },
+        "destino": {
+            "iata_code": "MAD"
+        },
+        "fecha_salida": "2023-10-09",
+        "millas": 980
+    }
+El aeropuerto y asientos disponibles se añaden automáticamente. El aeropuerto se hace una llamada a la API 'https://airlabs.co/api/v9/airports?iata_code=${iata_code}&api_key=${API_KEY}' y los asientos disponibles siempre se setean en 10.
+
+- UPDATE vuelo: PUT /vuelos/updateVuelo/:id (body):
+    {
+        "origen": {
+            "iata_code": "EZE",
+            "aeropuerto": "Buenos Aires - Ministro Pistarini International Airport"
+        },
+        "destino": {
+            "iata_code": "MAD",
+            "aeropuerto": "Adolfo Suarez Madrid-Barajas Airport"
+        },
+        "fecha_salida": "2023-07-13",
+        "precio": 950,
+        "moneda": "USD",
+        "asientosDisponibles": 10
+    }
+
+- Borrar un vuelo: DELETE /vuelos/deleteVuelo/:id
+- Filtrar vuelos: GET /vuelos/filtrarVuelos
+Parametros posibles en la query: origen, destino, precioMinimo, precioMaximo, precioExacto, fechaMinima, fechaMaxima, fechaExacta.
+Los minimos y maximos pueden usarse juntos.
+http://localhost:3000/vuelos/filtrarVuelos?origen=EZE&destino=MAD

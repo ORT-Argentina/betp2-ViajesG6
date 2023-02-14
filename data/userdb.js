@@ -38,8 +38,6 @@ async function addUsuario(usuario) {
 async function verifyUserByEmail(email) {
     const clienteMongo = await connection.getConnection();
 
-    let result = false;
-
     const user = await clienteMongo.db(DBNAME)
         .collection(COLLECTION)
         .findOne({email:email});
@@ -138,6 +136,48 @@ async function deleteUsuario(id) {
     return borrar;
 }
 
+async function comprarVuelo(user, flight, pasajeros) {
+    const clienteMongo = await connection.getConnection();
+
+    if (flight.asientosDisponibles < pasajeros) {
+        throw new Error(`Asientos disponibles insuficientes. Pasajeros: ${pasajeros} - Asientos disponibles en el vuelo: ${flight.asientosDisponibles}`);
+    }
+
+    const totalMillas = flight.millas * pasajeros;
+    if (user.millas < totalMillas) {
+      throw new Error(`Millas insuficientes. Millas del usuario: ${user.millas} - Total millas a gastar: ${totalMillas}`);
+    }
+
+    // In this code, the $each operator is used to append the modified 'flight' object to the 'vuelos_comprados' array, and the 
+    // $set operator is used to remove the 'asientosDisponibles' attribute from the 'flight' object before adding it to the array.
+
+    const flightCopy = {...flight, pasajeros, millasGastadas: totalMillas};
+    delete flightCopy.asientosDisponibles;
+    delete flightCopy.millas;
+
+    const updatedUser = await clienteMongo.db(DBNAME).collection(COLLECTION).updateOne(
+        { _id: new objectId(user._id) },
+        { $inc: { millas: -totalMillas }, $push: { vuelos_comprados: flightCopy } }
+    );
+
+    if (updatedUser.modifiedCount !== 1) {
+      throw new Error("No se pudo realizar la compra. Por favor verificar.");
+    }
+
+    return updatedUser;
+}
+
+async function cancelarVuelo (user, vuelo) {
+    const clienteMongo = await connection.getConnection();
+
+    // Refund the 'millasGastadas' to the 'millas' attribute y sacar el vuelo de la lista de vuelos_comprados
+    const updatedUser = await clienteMongo.db(DBNAME).collection(COLLECTION).updateOne(
+        { _id: new objectId(user._id) },
+        { $inc: { millas: vuelo.millasGastadas }, $pull: { vuelos_comprados: { _id: new objectId(vuelo._id) } } }
+    ); 
+    return updatedUser;
+}
+
 
 module.exports = { getUsuarios, getUsuario, addUsuario, updateUsuario, updatePassword, 
-                    deleteUsuario, findByCredentials, generateJWT, verifyUserByEmail };
+                    deleteUsuario, findByCredentials, generateJWT, verifyUserByEmail, comprarVuelo, cancelarVuelo };
